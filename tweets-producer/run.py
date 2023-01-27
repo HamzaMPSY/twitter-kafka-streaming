@@ -1,4 +1,3 @@
-# import required libraries
 from kafka import KafkaProducer
 from tweepy import OAuthHandler,Stream
 import os
@@ -10,10 +9,9 @@ producer = KafkaProducer(bootstrap_servers=os.getenv('KAFKA_SERVER') + ':' + os.
 
 
 #This is a basic listener that just put received tweets to kafka cluster.
-class MyListener(Stream):
+class TweetsListener(Stream):
     def on_data(self, data):
         try:
-            print("[!] this is the data you've goten : ",data)
             producer.send(topic = topic, value = data)
         except BaseException as e:
             print("Error on_data: %s" % str(e))
@@ -27,14 +25,12 @@ class MyListener(Stream):
 WORDS_TO_TRACK = os.getenv('WORDS_TO_TRACK')
 
 if __name__ == '__main__':
-    print('running the twitter-stream python code')
     #This handles Twitter authetification and the connection to Twitter Streaming API
     consumer_key, consumer_secret, access_token, access_token_secret = os.getenv('CONSUMER_KEY'), os.getenv('CONSUMER_SECRET') , os.getenv('ACCESS_TOKEN'), os.getenv('ACCESS_TOKEN_SECRET')
-    stream = MyListener(consumer_key, consumer_secret, access_token, access_token_secret)
+    stream = TweetsListener(consumer_key, consumer_secret, access_token, access_token_secret)
     # Goal is to keep this process always going
     while True:
         try:
-           # stream.sample()
             stream.filter(languages=["en"], track=WORDS_TO_TRACK)
         except:
             pass
